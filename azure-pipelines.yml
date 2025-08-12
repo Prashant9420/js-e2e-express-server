@@ -10,10 +10,13 @@ strategy:
   matrix:
     linux:
       imageName: "ubuntu-latest"
+      nodeVersion: "20.x"
     mac:
       imageName: "macOS-latest"
+      nodeVersion: "22.x"
     windows:
       imageName: "windows-latest"
+      nodeVersion: "18.x"
   maxParallel: 3
 
 pool:
@@ -22,14 +25,13 @@ pool:
 steps:
 - checkout: self
   persistCredentials: true
-  
+
 - task: NodeTool@0
   inputs:
-    versionSpec: '20.x'
+    versionSpec: $(nodeVersion)
   displayName: 'Install Node.js'
 
 - script: |
     npm install
-    git log
     npm run build
   displayName: 'npm install and build'
