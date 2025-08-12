@@ -10,6 +10,8 @@ pool:
   vmImage: windows-latest
 
 steps:
+- checkout: self
+  persistCredentials: true
 - task: NodeTool@0
   inputs:
     versionSpec: '20.x'
@@ -17,5 +19,6 @@ steps:
 
 - script: |
     npm install
+    git log
     npm run build
   displayName: 'npm install and build'
