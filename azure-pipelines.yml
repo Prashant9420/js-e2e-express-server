@@ -6,32 +6,59 @@
 trigger:
 - main
 
-strategy:
-  matrix:
-    linux:
-      imageName: "ubuntu-latest"
-      nodeVersion: "20.x"
-    mac:
-      imageName: "macOS-latest"
-      nodeVersion: "22.x"
-    windows:
-      imageName: "windows-latest"
-      nodeVersion: "18.x"
-  maxParallel: 3
 
-pool:
-  vmImage: $(imageName)
 
-steps:
-- checkout: self
-  persistCredentials: true
+# build stage 
+stages:
+- stage: build_stage
+  displayName: "initializing build..."
+  jobs:
+  - job: job1
+    strategy:
+      matrix:
+        linux:
+          imageName: "ubuntu-latest"
+          nodeVersion: "20.x"
+        mac:
+          imageName: "macOS-latest"
+          nodeVersion: "22.x"
+        windows:
+          imageName: "windows-latest"
+          nodeVersion: "18.x"
+      maxParallel: 1
+    pool:
+      vmImage: $(imageName)
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(nodeVersion)
+      displayName: "Installing Node js"
+    - script: npm install && npm run build
+      displayName: "installing dependencies and running the build"
 
-- task: NodeTool@0
-  inputs:
-    versionSpec: $(nodeVersion)
-  displayName: 'Install Node.js'
+# testing stage 
+- stage: testing_stage
+  displayName: "initializing testing scripts..."
+  dependsOn: build_stage
+  isSkippable: false
+  pool:
+    vmImage: ubuntu-latest
+  jobs:
+  - job: TestJob
+    steps:
+    - script: |
+        echo "running tests..."
+      displayName: "running test using jest and cypress tools..."
 
-- script: |
-    npm install
-    npm run build
-  displayName: 'npm install and build'
+# deployment stage 
+- stage: deploy_stage
+  displayName: "initializing deployment"
+  dependsOn: testing_stage
+  pool:
+    vmImage: ubuntu-latest
+  jobs:
+  - job: deploymentJob
+    steps:
+    - script: |
+        echo "deploying in progress"
+        sleep 3 && echo "deployed successfully...!!!!"
